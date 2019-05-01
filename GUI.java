@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public class GUI extends JFrame implements ActionListener, MouseListener, MouseMotionListener{
 
-	private static JPanel gameWindow, board, commentBox, sidebar,timelineBox, boardMargin,controlPanel;
+	private static JPanel gameWindow, board, commentBox, sidebar,timelineBox,controlPanel;
 	private static JButton[][] intersections = new JButton[19][19];
 	private static GridBagConstraints gbc;
 	private static JTextArea comment,timeline;
@@ -20,6 +20,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 	private static ImageIcon[] corners, sides, blackCorners, whiteCorners,blackSides, whiteSides;
 	public static int turn;
 	public static boolean[][] checked=new boolean[19][19];
+	
 	public static JLabel moves;
 	public static void main(String[] args) {
 		new GUI();
@@ -117,11 +118,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 		
 		setBoard();
 
-		boardMargin = new JPanel();
-		boardMargin.setBounds(50, 50, 850, 850);
-		boardMargin.setBackground(new Color(181, 129, 32));
-		boardMargin.setPreferredSize(new Dimension(850, 850));
-		//addConstraint(boardMargin, board, 1, 1, 1, 1, GridBagConstraints.BOTH, GridBagConstraints.CENTER);
+		
+		
 		
 		
 
@@ -185,19 +183,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 		resetChecked();
 	}
 
-	public void addConstraint(JPanel p, Component c, int x, int y, int w, int h, int f, int a) {
-		gbc = new GridBagConstraints();
-		gbc.gridx = x;
-		gbc.gridy = y;
-		gbc.gridwidth = w;
-		gbc.gridheight = h;
-		gbc.weightx = 1.0;
-		gbc.weighty = 1.0;
-		gbc.fill = f;
-		gbc.anchor = a;
 
-		p.add(c, gbc);
-	}
 	
 	@Override
 	public void mouseDragged(MouseEvent arg0) {
@@ -231,6 +217,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 
 		
 	}
+	
 	public void setBoard() {
 		for(int i = 0; i < 19; i++) {
 			for(int j = 0; j < 19; j++) {
@@ -290,6 +277,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 			} 
 		}
 	}
+	
 	public void setMoveLabel(){
 		moves.setText("Moves: "+turn);
 	}
@@ -303,8 +291,12 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 	}
 	
 
-public boolean hasLiberty(int i, int j, int type) {
+    //check whether the stone or the chain the stone belongs has liberty or not
+	public boolean hasLiberty(int i, int j, int type) {
 		
+		if(i<0||j<0||j>18||j>18) {
+			return false;
+		}
 		if(emptyGrid(i,j)) {
 			return true;
 		}
@@ -314,26 +306,28 @@ public boolean hasLiberty(int i, int j, int type) {
 		checked[i][j]=true;
 		 if(i > 0 &&!checked[i-1][j]&& hasLiberty(i-1, j,type)) 
 			 {return true;}  
-		    else if(i < 18 && !checked[i+1][j]&&hasLiberty(i+1, j,type)) 
-		    	{return true;}  
-		    else if(j > 0 &&!checked[i][j-1]&&  hasLiberty(i, j-1,type)) 
+		 
+		    else if(i < 18 &&!checked[i+1][j]&&hasLiberty(i+1, j,type)) 
+		    	{return true;}
+		    else if(j > 0 &&!checked[i][j-1]&&hasLiberty(i, j-1,type)) 
 		    	{return true;}  
 		    else if(j < 18 &&!checked[i][j+1]&& hasLiberty(i, j+1,type)) {return true;}  
 		    else {return false;}  
 	}
 	
-
+//remove all the pieces of a dead chain
 public void eatPieces(int i, int j, int type)  
 {  
-    if(getColor(i,j)!=type) {return;}  
-   intersections[i][j].setIcon(center); 
+    if(getColor(i,j)!=type||i<0||i>18||j<0||j>18) {return;}  
+    setEmpty(i,j);
    
-    if(i > 0) {eatPieces(i-1, j, type);}  
-    if(i < 18) { eatPieces(i+1, j,type); }
-    if(j > 0) {eatPieces(i, j-1,type);}  
-    if(j < 18) {eatPieces(i, j+1,type);}  
+    if(i >= 0) {eatPieces(i-1, j, type);}  
+    if(i <= 18) {eatPieces(i+1, j,type); }
+    if(j >= 0) {eatPieces(i, j-1,type);}  
+    if(j <= 18) {eatPieces(i, j+1,type);}  
 }  
-
+	
+//check if the chosen button is black
 	public boolean black(int i, int j) {
 		boolean black=false;
 		Icon icon=intersections[i][j].getIcon();
@@ -349,7 +343,7 @@ public void eatPieces(int i, int j, int type)
 		}
 		return black;
 	}
-	
+//check if the chosen buttons is white
 	public boolean white(int i, int j) {
 		boolean white=false;
 		Icon icon=intersections[i][j].getIcon();
@@ -365,11 +359,18 @@ public void eatPieces(int i, int j, int type)
 		}
 		return white;
 	}
+	//2 means black, 1 means white, 0 means empty
 	public int getColor(int i, int j) {
+		if(i>=0&&i<=18&&j>=0&&j<=18) {
 		if(black(i,j)) {return 2;}
 		else if(white(i,j)) {return 1;}
 		else {return 0;}
+		}
+		else {
+			return -1;
+		}
 	}
+	//check whether the chosen button is an empty grid
 	public boolean emptyGrid(int i, int j) {
 		boolean empty=false;
 		Icon icon=intersections[i][j].getIcon();
@@ -388,6 +389,7 @@ public void eatPieces(int i, int j, int type)
 		return empty;
 	}
 	
+	//change the image of the button to a black stone image
 	public void addBlackPiece(int i,int j) {
 		if(i==0&&j==0) {
 			intersections[i][j].setIcon(blackCorners[0]);
@@ -417,7 +419,7 @@ public void eatPieces(int i, int j, int type)
 			intersections[i][j].setIcon(blackCenter);
 			}
 	}
-	
+	//change the image of the button to a white stone image
 	public void addWhitePiece(int i, int j) {
 		if(i==0&&j==0) {
 			intersections[i][j].setIcon(whiteCorners[0]);
@@ -447,6 +449,7 @@ public void eatPieces(int i, int j, int type)
 			intersections[i][j].setIcon(whiteCenter);
 			}
 	}
+	//change the image of the button to a empty grid
 	public void setEmpty(int i, int j) {
 		if(i == 0) {
 			if(j == 0) {
@@ -515,28 +518,26 @@ public void eatPieces(int i, int j, int type)
 					
 						}
 						resetChecked();
+						
 						if(getColor(i-1,j)==turn%2+1&&!hasLiberty(i-1,j,turn%2+1)) {
-							System.out.println("yes");
-			
+							
 							eatPieces(i-1,j,turn%2+1);
+						
 						
 						}
 						resetChecked();
 						if(getColor(i+1,j)==turn%2+1&&!hasLiberty(i+1,j,turn%2+1)) {
-							System.out.println("yes");
 			
 							eatPieces(i+1,j,turn%2+1);
 						}
 						resetChecked();
 						if(getColor(i,j-1)==turn%2+1&&!hasLiberty(i,j-1,turn%2+1)) {
-							System.out.println("yes");
-						
+					
 							eatPieces(i,j-1,turn%2+1);
 						}
 						resetChecked();
 						if(getColor(i,j+1)==turn%2+1&&!hasLiberty(i,j+1,turn%2+1)) {
-							System.out.println("yes");
-							
+						
 							eatPieces(i,j+1,turn%2+1);
 						}
 						resetChecked();
