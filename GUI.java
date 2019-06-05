@@ -19,7 +19,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 	private static ImageIcon[] corners, sides, blackCorners, whiteCorners,blackSides, whiteSides,markers;
 	private static JMenuBar menuBar,toolBar;
 	private static JMenu file, view, game,showHide, tools;
-	private static JMenuItem newGame, save, saveAs, load, open, exit,coordinates, moveNum, timelineButton, toolbar, tutorial, boardSize, handicap, score, info, viewSave, AI,square,triangle,circle,crossing,cancel;
+	private static JMenuItem newGame, save, saveAs, load, open, exit,coordinates, moveNum, timelineButton, toolbar, tutorial, boardSize, handicap, score, info, viewSave, AI,square,triangle,circle,crossing,eraser,cancel;
 	private static JLabel turnTimer;
 	public int turn, markerType;
 	public static FileManager files;
@@ -88,12 +88,15 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		circle.addActionListener(this);
 		crossing = new JMenuItem("Crossing");
 		crossing.addActionListener(this);
+		eraser = new JMenuItem("Eraser");
+		eraser.addActionListener(this);
 		cancel = new JMenuItem("Cancel");
 		cancel.addActionListener(this);
 		tools.add(square);
 		tools.add(triangle);
 		tools.add(circle);
 		tools.add(crossing);
+		tools.add(eraser);
 		tools.add(cancel);
 		markerType=0;
 		
@@ -161,7 +164,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		whiteCorners=new ImageIcon[4];
 		blackSides=new ImageIcon[4];
 		whiteSides=new ImageIcon[4];
-		markers = new ImageIcon[4];
+		markers = new ImageIcon[6];
 		for(int i=0;i<4;i++) {
 			corners[i]= new ImageIcon("PieceIcons/corner"+ (i+1) +".jpg");
 			sides[i]= new ImageIcon("PieceIcons/side"+ (i+1) +".jpg");
@@ -169,6 +172,8 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 			whiteCorners[i]= new ImageIcon("PieceIcons/whiteCorner"+ (i+1) +".jpg");
 			blackSides[i]= new ImageIcon("PieceIcons/blackSide"+ (i+1) +".jpg");
 			whiteSides[i]= new ImageIcon("PieceIcons/whiteSide"+ (i+1) +".jpg");
+		}
+		for(int i=0; i<6; i++) {
 			markers[i]= new ImageIcon("markers/marker"+(i+1)+".jpg");
 		}
 		
@@ -310,6 +315,9 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		if(e.getSource()==crossing) {
 			markerType=4;
 		}
+		if(e.getSource()==eraser) {
+			markerType=-1;
+		}
 		if(e.getSource()==cancel) {
 			markerType=0;
 		}
@@ -380,6 +388,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 			turn = 0;
 			userSaved = false;
 			isAIActive = false;
+			markerType = 0;
 			if(files.readFilepath() == null) {
 				load.setEnabled(false);
 			}
@@ -533,9 +542,9 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		boolean c = true;
 		for(int i=0;i<19;i++) { 
 			for(int j = 0; j < 19; j++) {
-				if(emptyGrid(i, j)) {				
+								
 					if(e.getSource()==intersections[i][j]) { //check each piece if it's been clicked
-						if(markerType==0) {
+						if(markerType==0&&emptyGrid(i,j)) {
 						if(turn%2 == 0) { //if it is black's turn
 							s = Character.toString((char)blackPiece); //unicode character
 							addBlackPiece(i, j);
@@ -592,17 +601,36 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 							setEmpty(i, j);
 						}
 					}
-						else {
+						else if(markerType!=0) {
 							setMarker(markerType, i, j);
 						}
+						
+						
 				}
-			}
+			
 		}
 	}}
 	public void setMarker(int type, int i, int j) {
-
-		intersections[i][j].setIcon(markers[type-1]);
-	
+		if(type==-1) {
+		if(emptyGrid(i,j)) {
+		setEmpty(i,j);	
+		}
+		else if(intersections[i][j].getIcon().equals(markers[4])) {
+			addBlackPiece(i,j);
+		}
+		else if(intersections[i][j].getIcon().equals(markers[5])) {
+			addWhitePiece(i,j);
+			}
+		}
+		else if(black(i,j)){
+			intersections[i][j].setIcon(markers[4]);
+		}
+		else if(white(i,j)){
+			intersections[i][j].setIcon(markers[5]);
+		}
+		else {
+			intersections[i][j].setIcon(markers[type-1]);
+		}
 	}
 	//override method to manually place pieces using coordinates and colour
 	public void setPiece(int i, int j, boolean c) {
@@ -840,6 +868,9 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 				break;
 			}
 		}
+		if(icon.equals(markers[4])) 
+			isBlack=true;
+		
 		return isBlack;
 	}
 	
@@ -857,6 +888,8 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 				break;
 			}
 		}
+		if(icon.equals(markers[5])) 
+			isWhite=true;
 		return isWhite;
 	}
 	
@@ -887,8 +920,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		
 		return empty;
 	}
-	
-	//adds black piece based on location on board
+		//adds black piece based on location on board
 	public void addBlackPiece(int i,int j) {
 		if(i==0&&j==0) {
 			intersections[i][j].setIcon(blackCorners[0]);
